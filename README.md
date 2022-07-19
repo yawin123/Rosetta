@@ -20,9 +20,9 @@ En todos los casos, los parámetros a enviar son los siguientes:
 > *SecPOST es una forma securizada de POST. Sus rutas sólo responden si y sólo si el método de llamada es POST y en el request se incluye una variable llamada "crlf" cuyo contenido sea igual al contenido de la variable de sesión "crlf".*
 > ```php
 > <? if( isset($_POST['crlf']) &&
-       isset($_SESSION['crlf']) &&
-       $_POST['crlf'] == $_SESSION['crlf']
-    ) ?>
+>       isset($_SESSION['crlf']) &&
+>       $_POST['crlf'] == $_SESSION['crlf']
+>    ) ?>
 >```
 
 #### Otros métodos de *Router*
@@ -87,7 +87,6 @@ Por el momento, el sistema incluye cuatro directivas que pueden añadirse a las 
         </head>
         <body>
             @yield(content)
-
             <hr/>
             <footer>
               Puedes ver el código en el siguiente repositorio: <a href="https://github.com/yawin123/sw" target="_blank">https://github.com/yawin123/sw</a>
