@@ -1,0 +1,156 @@
+<?php
+/*
+    Este fichero contiene el código relacionado con el enrutado de la aplicación.
+    Permite enrutar el contenido, haciendo que no sea necesario llenar los sripts
+    de includes.
+*/
+
+    class Router
+    {
+        private $route_path;   //Path al que se quiere acceder. Es un array.
+                               //Ej.: /user/foo => ["user", "foo"]
+
+        private $routes;    //Array donde se almacenan las rutas
+        private $route_names; //Array donde se relacionan las rutas con nombres
+
+        //Router es singleton
+            private static $instance = null;
+            public static function getInstance()
+            {
+                if (self::$instance == null)
+                {
+                    self::$instance = new Router();
+                }
+
+                return self::$instance;
+            }
+
+        private function __construct()
+        {
+            //Separamos ruta de variables
+                $tmp = explode('?', $_SERVER['REQUEST_URI'], 2);
+
+           //Cocinamos la ruta
+                $this->route_path = $tmp[0];
+
+                /*
+                    Esto iba a usarlo para poder hacer paths tipo:
+                    Router::get("/user/$user", [UserController::class, 'panel']);
+                    Lo cual haría que si haces get a /user/usuario se llamara a
+                    UserController::panel, pasándole como argumento $user = "usuario".
+
+                    Pero me da pereza y puedo hacer el proyecto sin ello, así que
+                    se queda así.
+                */
+
+            // Informamos a Request de las variables GET
+               Request::addMember($_GET);
+
+
+            $this->method = $_SERVER['REQUEST_METHOD']; //Obtenemos el método
+            if($this->method == "POST")
+            {
+                // Informamos a Request de las variables POST
+                    Request::addMember($_POST);
+
+                //Si el método es POST, existe la variable "crlf" tanto en la llamada como en la sesión y sus valores coinciden
+                    if(isset($_POST['crlf']) && isset($_SESSION['crlf']) && $_POST['crlf'] == $_SESSION['crlf'])
+                    {
+                        //Cambiamos el método a SecPOST
+                            $this->method = "SecPOST";
+                    }
+            }
+
+            //Si hay ficheros en la llamada
+              if(isset($_FILES) && !empty($_FILES))
+              {
+                  Request::addMember($_FILES);
+              }
+
+            //Inicializamos los arrays de rutas y nombres
+                $this->routes = ["GET" => array(), "POST" => array(), "SecPOST" => array()];
+                $this->route_names = array();
+
+            //Inicializamos el token para el método PUT
+                //$_SESSION['crlf'] = rand();
+        }
+
+        //Función para dar de alta una ruta GET
+            public static function get($route, $callback, $name = "")
+            {
+                //Asociamos la ruta con su callback
+                    self::getInstance()->routes["GET"][$route] = $callback;
+
+                if($name != "") //Si se ha indicado nombre
+                {
+                    //Asociamos el nombre a la ruta
+                        self::getInstance()->route_names[$name] = $route;
+                }
+            }
+
+        //Función para dar de alta una ruta POST
+            public static function post($route, $callback, $name = "")
+            {
+                //Asociamos la ruta con su callback
+                    self::getInstance()->routes["POST"][$route] = $callback;
+
+                if($name != "") //Si se ha indicado nombre
+                {
+                    //Asociamos el nombre a la ruta
+                        self::getInstance()->route_names[$name] = $route;
+                }
+            }
+
+        //Función para dar de alta una ruta PUT
+            public static function secpost($route, $callback, $name = "")
+            {
+                //Asociamos la ruta con su callback
+                    self::getInstance()->routes["SecPOST"][$route] = $callback;
+
+                if($name != "") //Si se ha indicado nombre
+                {
+                    //Asociamos el nombre a la ruta
+                        self::getInstance()->route_names[$name] = $route;
+                }
+            }
+
+        //Función para saber si existe alguna ruta con el nombre dado
+            public static function has($route_name)
+            {
+                return array_key_exists($route_name, self::getInstance()->route_names);
+            }
+
+        //Función para obtener la ruta asociada al nombre dado
+            public static function path($route_name, $vars = array())
+            {
+                $path = self::getInstance()->route_names[$route_name];
+
+                $i = 0;
+                foreach($vars as $k => $v)
+                {
+                    $path = ($i > 0) ? $path."&" : $path."?"; $i++;
+                    $path = $path.$k."=".$v;
+                }
+
+                return $path;
+            }
+
+        //Función para resolver la ruta solicitada (llamada a callback)
+            public static function resolve()
+            {
+                $me = self::getInstance(); //Se obtiene la instancia al router
+
+                //Si existe la ruta requerida
+                    if(array_key_exists($me->route_path, $me->routes[$me->method]))
+                    {
+                        //Se llama a su callback
+                        echo call_user_func($me->routes[$me->method][$me->route_path]);
+                    }
+                //Si no
+                    else
+                    {
+                        //Se llama a la función de fallo
+                            fail();
+                    }
+            }
+    }

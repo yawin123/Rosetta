@@ -1,0 +1,145 @@
+@extends(layout)
+
+@section(content)
+  <h1>Rosetta</h1>
+  <p>Rosetta es un framework de código abierto para desarollar aplicaciones y servicios web. Fue creado por Miguel Albors Iruretagoyena durante sus clases en la universidad para poder explorar el funcionamiento de este tipo de herramientas.</p>
+
+  <h2>Componentes</h2>
+  <h3>Router</h3>
+  <p>El router es el sistema de navegación de la web. El .htaccess garantiza que, sea cual sea la petición, siempre se llamará a &quot;/index.php&quot;. El router es quien toma la ruta solicitada y adquiere sus contenidos. Para ello, es necesario dar de alta las rutas en el fichero &quot;routes.php&quot;.</p>
+  <p>Para hacerlo hay tres métodos:</p>
+
+  <ul>
+    <li>Router::get(<strong>ruta</strong>, <strong>callback</strong>, <strong>&lt;nombre&gt;</strong>)</li>
+    <li>Router::post(<strong>ruta</strong>, <strong>callback</strong>, <strong>&lt;nombre&gt;</strong>)</li>
+    <li>Router::put(<strong>ruta</strong>, <strong>callback</strong>, <strong>&lt;nombre&gt;</strong>)</li>
+  </ul>
+
+  <p>En todos los casos, los parámetros a enviar son los siguientes:
+   - <strong>ruta (string):</strong> La ruta a la que se corresponde <em>(ej: &quot;/about&quot;)</em>.
+   - <strong>callback (function):</strong> Función a la que llamar cuando se llame a la ruta. Se pueden emplear tanto funciones como miembros de clases.
+   - <strong>nombre (string) &lt;opcional&gt;:</strong> El nombre que se le da a esta ruta. No es necesario para que la ruta responda; pero es útil para rellenar los href llamando a <em>Router::path()</em>.</p>
+
+  <blockquote>
+  <h5><em>La diferencia entre POST y SecPOST</em></h5>
+
+  <p><em>SecPOST es una forma securizada de POST. Sus rutas sólo responden si y sólo si el método de llamada es POST y en el request se incluye una variable llamada &quot;crlf&quot; cuyo contenido sea igual al contenido de la variable de sesión &quot;crlf&quot;.</em>
+  <pre><code>  &lt;? if( isset($_POST[&#39;crlf&#39;]) &amp;&amp;
+         isset($_SESSION[&#39;crlf&#39;]) &amp;&amp;
+         $_POST[&#39;crlf&#39;] == $_SESSION[&#39;crlf&#39;]
+      ) ?&gt;</code></pre>
+  </blockquote>
+
+  <h4>Otros métodos de <em>Router</em></h4>
+  <p><strong>getInstance():</strong> Aunque todas las funciones públicas son estáticas (por lo que no se necesita tener acceso directo a la instancia del router), esta función devuelve la instancia al router.</p>
+  <p><strong>has(string):</strong> Consulta si está registrada alguna ruta con el nombre indicado.</p>
+  <p><strong>path(string, &lt;[dict]&gt;):</strong> Devuelve la ruta asociada al nombre indicado. Aunque es opcional, se puede añadir un diccionario con variables que añadir a la ruta.</p>
+
+  <p><em>Ejemplo:</em></p>
+  <pre><code>      &lt;? $user = &quot;usuario&quot;; $pass = &quot;qwertyuiop&quot;; ?&gt;
+        &lt;li&gt;&lt;a href=&quot;&lt;? echo Router::path(&quot;users&quot;, compact(&quot;user&quot;, &quot;pass&quot;));?&gt;&quot;&gt;2 variables&lt;/a&gt;&lt;/li&gt;</code></pre>
+
+  <p>La ruta generada por este ejemplo sería:</p>
+  <pre><code>  http://midominio.com/variables?user=usuario&amp;pass=qwertyuiop</code></pre>
+
+  <blockquote>
+    <p><em>Si la ruta no existe, da error. Se debe comprobar primero si la ruta existe.</em></p>
+  </blockquote>
+
+  <p><strong>resolve():</strong> Llama al callback asociado a la ruta a la que se ha accedido.</p>
+  <br/>
+  <h3>Request</h3>
+  <p>Request es la clase asociada a la información que envía el usuario. Por el momento, sólo contiene las variables enviadas por GET y por POST.</p>
+  <p>Para acceder a una variable enviada, sólo hay que acceder a ella como si de un miembro se tratara:
+  <pre><code>        Request::getInstance()-&gt;variable;</code></pre>
+  <p>Se puede exigir que una variable exista y contenga algo para continuar la ejecución. La función <strong>Required([])</strong> permite indicar qué variables se requiere que existan. En caso de, al menos, una de ellas no exista o no contenga datos, se vuelve a la página anterior.</p>
+  <pre><code>        Request::required([&quot;var1&quot;, &quot;var2&quot;, &quot;var3&quot;, ...]);  </code></pre>
+  <br/>
+  <h3>View</h3>
+  <p>View es el sistema de vistas y plantillas que se ha implementado para facilitar la tarea de implementar la interfaz de la aplicación web.</p>
+  <p>Por el momento, el sistema incluye cuatro directivas que pueden añadirse a las vistas y plantillas:</p>
+
+  <ul>
+    <li><strong>&#64;extend(plantilla):</strong> indica que la vista o plantilla hereda de la plantilla indicada.</li>
+    <li><strong>&#64;yield(contenido):</strong> indica que en ese lugar se colocará el contenido de una sección con ese nombre.</li>
+    <li><strong>&#64;section(contenido):</strong> indica el inicio de una sección con ese nombre.</li>
+    <li><strong>&#64;endsection(contenido):</strong> indica el final de una sección con ese nombre.</li>
+    <li><strong>&#64;crlf:</strong> genera el input oculto con el token de SecPOST. <em>Es obligatorio incluirlo en todo formulario cuyo action llame a una ruta SecPOST.</em></li>
+  </ul>
+
+  <h4>Funciones de View</h4>
+  <p><strong>view(string, &lt;[dict]&gt;):</strong> devuelve el texto resultante de ejecutar la vista indicada. Opcionalmente se puede enviar un diccionario con variables. Más adelante, se aplicará un <em>extract</em> a dicho diccionario, convirtiendo su contenido en variables independientes; por lo que la vista porá acceder a ellas de manera independiente.</p>
+  <p><strong>back():</strong> La función back devuelve una cabecera que obliga a volver a la págna anterior.</p>
+  <p><strong>fail():</strong> La función fail sirve para abortar la ejecución devolviendo un mensaje de error. Por el momento arroja siempre el error 404, cuya vista se encuentra en &quot;views/404.view&quot;.</p>
+
+  <h4>Ejemplo de uso</h4>
+  <h5>layout.view</h5>
+  <pre><code>    &lt;html&gt;
+          &lt;head&gt;
+              &lt;title&gt;Rossetta&lt;/title&gt;
+          &lt;/head&gt;
+          &lt;body&gt;
+              &#64;yield(content)
+
+              &lt;hr/&gt;
+              &lt;footer&gt;
+                Puedes ver el código en su repositorio
+              &lt;/footer&gt;
+          &lt;/body&gt;
+      &lt;/html&gt;</code></pre>
+
+  <h5>variables.view</h5>
+  <pre><code>    &#64;extends(layout)
+
+      &#64;section(content)
+          &lt;h1&gt;Variables&lt;/h1&gt;
+          &lt;p&gt;En esta vista puedes ver listadas las variables GET que has proporcionado&lt;p&gt;
+          &lt;p&gt;Haz click &lt;a href=&quot;&lt;? echo Router::path(&quot;inicio&quot;);?&gt;&quot;&gt;aquí&lt;/a&gt; para volver al index.&lt;/p&gt;
+          &lt;? if(isset($vars))
+          {?&gt;
+              &lt;p&gt;
+                  &lt;table border=&quot;1px solid&quot; style=&quot;text-align: center;&quot;&gt;
+                      &lt;tr&gt;
+                         &lt;th&gt;Nombre&lt;/th&gt;
+                         &lt;th&gt;Valor&lt;/th&gt;
+                      &lt;/tr&gt;
+                      &lt;? foreach($vars as $k =&gt; $v)
+                      {?&gt;
+                          &lt;tr&gt;&lt;td&gt;&lt;? echo $k;?&gt;&lt;/td&gt;&lt;td&gt;&lt;? echo $v;?&gt;&lt;/td&gt;&lt;/tr&gt;
+                      &lt;?}?&gt;
+                  &lt;/table&gt;
+              &lt;/p&gt;
+          &lt;?}?&gt;
+      &#64;endsection(content)</code></pre>
+
+  <h3>Base de datos</h3>
+  <p>Se ha creado una clase BD para gestionar la conexión con la base de datos. Posee dos funciones principales:</p>
+
+  <ul>
+    <li><strong>select(string):</strong> Esta función ejecuta la query proporcionada y, como asume que es una select, devuelve el resultado de la ejecución.</li>
+    <li><strong>execQuery(string):</strong> Esta función es para ejecutar todas aquellas querys que no dan como resultado una serie de datos (update, insert, delete,...). Si la ejecución de la query da error, devuelve el error.</li>
+  </ul>
+
+  <h4>Modelos</h4>
+  <p>Se ha diseñado un sistema de Modelos para abstraer del uso de la base de datos. Cada modelo heredará de <em>Model</em> y en su constructor deberá llamar al constructor padre indicando cuáles son sus columnas. Del siguiente modo:</p>
+  <pre><code>        class User extends Model
+         {
+             public function __construct()
+             {
+                 parent::__construct([&quot;username&quot;, &quot;password&quot;, &quot;email&quot;, &quot;rango&quot;]);
+             }
+         }</code></pre>
+
+  <blockquote>
+    <p>La tabla del modelo deberá tener como nombre el nombre del modelo en minúsculas seguido de una <em>s</em>. Siguiendo con el modelo de ejemplo, la tabla del modelo <em>User</em> se llamaría <em>users</em>. Todos los modelos deben contener una columna llamada <em>id</em> que no se especificará en el constructor.</p>
+  </blockquote>
+
+  <h5>Funciones miembro</h5>
+  <ul>
+    <li><strong>first():</strong> Devuelve el primer modelo que coincida con la query.</li>
+    <li><strong>get():</strong> Devuelve un array con todas las instancias que coincidan con la query construída. Si no había query construída, devuelve todas las instancias.</li>
+    <li><strong>where($field, $operator, $value):</strong> añade una cláusula <em>WHERE</em> a la query construída. Si no hay query construída, genera primero una query <em>SELECT * from tabla</em>.</li>
+    <li><strong>delete():</strong> Elimina el modelo de la base de datos. <em>Esta función no es estática.</em></li>
+    <li><strong>save():</strong> Inserta o actualiza el modelo la base de datos. <em>Esta función no es estática.</em></li>
+  </ul>
+@endsection(content)
