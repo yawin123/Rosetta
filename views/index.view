@@ -2,7 +2,7 @@
 
 @section(content)
   <h1>Rosetta</h1>
-  <p>Rosetta es un framework de código abierto para desarollar aplicaciones y servicios web. Fue creado por Miguel Albors Iruretagoyena durante sus clases en la universidad para poder explorar el funcionamiento de este tipo de herramientas.</p>
+  <p>Rosetta es un framework de código abierto para desarrollar aplicaciones y servicios web. Fue creado por Miguel Albors Iruretagoyena durante sus clases en la universidad para poder explorar el funcionamiento de este tipo de herramientas.</p>
 
   <h2>Componentes</h2>
   <h3>Router</h3>
@@ -91,27 +91,27 @@
   <h5>variables.view</h5>
   <pre><code>    &#64;extends(layout)
 
-      &#64;section(content)
-          &lt;h1&gt;Variables&lt;/h1&gt;
-          &lt;p&gt;En esta vista puedes ver listadas las variables GET que has proporcionado&lt;p&gt;
-          &lt;p&gt;Haz click &lt;a href=&quot;&lt;? echo Router::path(&quot;inicio&quot;);?&gt;&quot;&gt;aquí&lt;/a&gt; para volver al index.&lt;/p&gt;
-          &lt;? if(isset($vars))
-          {?&gt;
-              &lt;p&gt;
-                  &lt;table border=&quot;1px solid&quot; style=&quot;text-align: center;&quot;&gt;
-                      &lt;tr&gt;
-                         &lt;th&gt;Nombre&lt;/th&gt;
-                         &lt;th&gt;Valor&lt;/th&gt;
-                      &lt;/tr&gt;
-                      &lt;? foreach($vars as $k =&gt; $v)
-                      {?&gt;
-                          &lt;tr&gt;&lt;td&gt;&lt;? echo $k;?&gt;&lt;/td&gt;&lt;td&gt;&lt;? echo $v;?&gt;&lt;/td&gt;&lt;/tr&gt;
-                      &lt;?}?&gt;
-                  &lt;/table&gt;
-              &lt;/p&gt;
-          &lt;?}?&gt;
-      &#64;endsection(content)</code></pre>
-
+    &#64;section(content)
+        &lt;h1&gt;Variables&lt;/h1&gt;
+        &lt;p&gt;En esta vista puedes ver listadas las variables GET que has proporcionado&lt;p&gt;
+        &lt;p&gt;Haz click &lt;a href=&quot;&lt;? echo Router::path(&quot;inicio&quot;);?&gt;&quot;&gt;aquí&lt;/a&gt; para volver al index.&lt;/p&gt;
+        &lt;? if(isset($vars))
+        {?&gt;
+            &lt;p&gt;
+                &lt;table border=&quot;1px solid&quot; style=&quot;text-align: center;&quot;&gt;
+                    &lt;tr&gt;
+                       &lt;th&gt;Nombre&lt;/th&gt;
+                       &lt;th&gt;Valor&lt;/th&gt;
+                    &lt;/tr&gt;
+                    &lt;? foreach($vars as $k =&gt; $v)
+                    {?&gt;
+                        &lt;tr&gt;&lt;td&gt;&lt;? echo $k;?&gt;&lt;/td&gt;&lt;td&gt;&lt;? echo $v;?&gt;&lt;/td&gt;&lt;/tr&gt;
+                    &lt;?}?&gt;
+                &lt;/table&gt;
+            &lt;/p&gt;
+        &lt;?}?&gt;
+    &#64;endsection(content)</code></pre>
+  <br/>
   <h3>Base de datos</h3>
   <p>Se ha creado una clase BD para gestionar la conexión con la base de datos. Posee dos funciones principales:</p>
 

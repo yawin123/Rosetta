@@ -1,5 +1,5 @@
 # Rosetta
-Rosetta es un framework de código abierto para desarollar aplicaciones y servicios web. Fue creado por Miguel Albors Iruretagoyena durante sus clases en la universidad para poder explorar el funcionamiento de este tipo de herramientas.
+Rosetta es un framework de código abierto para desarrollar aplicaciones y servicios web. Fue creado por Miguel Albors Iruretagoyena durante sus clases en la universidad para poder explorar el funcionamiento de este tipo de herramientas.
 
 ## Componentes
 ### Router
