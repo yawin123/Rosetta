@@ -44,7 +44,7 @@ Se debe tener en cuenta que es importante el orden en el que se declaren las rut
 ```php
  <?
    //En este ejemplo, siempre saltará la primera ruta, porque /id/{var1}
-   //también da coincidencia esta
+   //también da coincidencia con esta
 
    Router::get("/{var1}/{var2}", [HomeController::class, 'vars2']);
    Router::get("/id/{var1}", [HomeController::class, 'vars']);
