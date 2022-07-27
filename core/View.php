@@ -122,6 +122,12 @@
             return $contenido->render(); //Devolvemos el resultado de la renderización
         }
 
+    //Función para redirigir a otra url
+        function redirect($path)
+        {
+            return header('Location: ' . $path);
+        }
+
     //Función para volver a la página anterior
         function back()
         {
