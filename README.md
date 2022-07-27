@@ -25,6 +25,31 @@ En todos los casos, los parámetros a enviar son los siguientes:
 >    ) ?>
 >```
 
+#### Variables en las rutas
+Este sistema permite definir rutas con bloques de contenido variable. Este contenido variable se enviará al callback en forma de argumentos.
+
+```php
+ <?
+   Router::get("/", [HomeController::class, 'index'], "index");
+
+   Router::get("/id/{var1}", [HomeController::class, 'vars']);
+   Router::get("/{var1}/{var2}", [HomeController::class, 'vars2']);
+   Router::post("/{var1}", [HomeController::class, 'vars']);
+```
+
+El sistema primero tratará de encontrar coincidencias literales. Si no las encuentra, buscará si la ruta solicitada se ajusta a alguna de las rutas con variables.
+
+Se debe tener en cuenta que es importante el orden en el que se declaren las rutas; puesto que si hay dos coincidencias posibles, saltará la primera de las dos.
+
+```php
+ <?
+   //En este ejemplo, siempre saltará la primera ruta, porque /id/{var1}
+   //también da coincidencia esta
+
+   Router::get("/{var1}/{var2}", [HomeController::class, 'vars2']);
+   Router::get("/id/{var1}", [HomeController::class, 'vars']);
+```
+
 #### Otros métodos de *Router*
 **getInstance():** Aunque todas las funciones públicas son estáticas (por lo que no se necesita tener acceso directo a la instancia del router), esta función devuelve la instancia al router.
 

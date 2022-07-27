@@ -1,0 +1,14 @@
+@extends(layout)
+
+@section(content)
+    <ul>
+    <?
+        foreach($vars as $k => $v)
+        {?>
+            <li><strong><? echo $k;?></strong> => <? echo $v;?></li>
+        <?}
+    ?>
+    </ul>
+    <br/>
+    <form method="post" action="/post"><input type="submit"/></form>
+@endsection(content)
