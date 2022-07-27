@@ -98,6 +98,8 @@ Por el momento, el sistema incluye cuatro directivas que pueden añadirse a las 
 
 **view(string, \<[dict]\>):** devuelve el texto resultante de ejecutar la vista indicada. Opcionalmente se puede enviar un diccionario con variables. Más adelante, se aplicará un *extract* a dicho diccionario, convirtiendo su contenido en variables independientes; por lo que la vista porá acceder a ellas de manera independiente.
 
+**redirect($path):** Esta función redirige a la url indicada.
+
 **back():** La función back devuelve una cabecera que obliga a volver a la págna anterior.
 
 **fail():** La función fail sirve para abortar la ejecución devolviendo un mensaje de error. Por el momento arroja siempre el error 404, cuya vista se encuentra en "views/404.view".
