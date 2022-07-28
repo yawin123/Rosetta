@@ -165,7 +165,6 @@
 
                 //Añadimos la cláusula where
                     self::$query = self::$query." ORDER BY $field $order";
-                    echo self::$query;
 
             }
 
