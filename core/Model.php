@@ -105,7 +105,9 @@
                     self::$query = "DELETE FROM ".$this->table." WHERE id = ".$id;
 
                 //Ejecutamos la query
-                    $query_result = BD::getInstance()->execQuery(self::$query);
+                    BD::getInstance()->prepare(self::$query);
+                    $query_result = BD::getInstance()->execPreparedQuery([]);
+
 
                 //Si hay error lo mostramos y abortamos ejecución
                     if($query_result){echo $query_result; die();}
