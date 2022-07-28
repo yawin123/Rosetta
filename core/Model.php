@@ -153,6 +153,20 @@
 
             }
 
+        //Función para añadir una cláusula orderby a la select (si esta no existe, la crea)
+            public static function orderby($field, $order = "ASC")
+            {
+                if(self::$query == "") //Si no hay query
+                {
+                    self::_generateSelect(); //Generamos la select
+                }
+
+                //Añadimos la cláusula where
+                    self::$query = self::$query." ORDER BY $field $order";
+                    echo self::$query;
+
+            }
+
         //Función para recuperar la lista de modelos que resulten de la ejecución de la query
         //Si no hay query genera una select *
             public static function get()
