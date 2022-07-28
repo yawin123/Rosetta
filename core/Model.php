@@ -155,6 +155,22 @@
 
             }
 
+        //Función para añadir una cláusula and where a la select (si esta no existe, la crea sin el and)
+            public static function andwhere($field, $operator, $value)
+            {
+                $and = " AND";
+                if(self::$query == "") //Si no hay query
+                {
+                    self::_generateSelect(); //Generamos la select
+                    $and = "";
+                }
+
+                //Añadimos la cláusula where
+                    $val = BD::sanitize($value);
+                    self::$query = self::$query."$and WHERE $field $operator $val";
+
+            }
+
         //Función para añadir una cláusula orderby a la select (si esta no existe, la crea)
             public static function orderby($field, $order = "ASC")
             {

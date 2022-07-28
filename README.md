@@ -176,6 +176,7 @@ Cada modelo heredará de *Model* y en su constructor deberá llamar al construct
 * **first():** Devuelve el primer modelo que coincida con la query.
 * **get():** Devuelve un array con todas las instancias que coincidan con la query construída. Si no había query construída, devuelve todas las instancias.
 * **where($field, $operator, $value):** añade una cláusula *WHERE* a la query construída. Si no hay query construída, genera primero una query *SELECT * from tabla*.
+* **andwhere($field, $operator, $value):** añade una cláusula *AND WHERE* a la query construída. Si no hay query construída, genera primero una query *SELECT * from tabla* y añade la condición sin la cláusula *AND*.
 * **ordeby($field, <$order>):** añade una cláusula *ORDER BY* a la query construída. Si no hay query construída, genera primero una query *SELECT * from tabla*.
 
 * **delete():** Elimina el modelo de la base de datos. *Esta función no es estática.*
