@@ -1,9 +1,7 @@
 @extends(layout)
 
 @section(content)
-  <h1>Rosetta</h1>
-  <p>Rosetta es un framework de código abierto para desarrollar aplicaciones y servicios web. Fue creado por Miguel Albors Iruretagoyena durante sus clases en la universidad para poder explorar el funcionamiento de este tipo de herramientas.</p>
-
+  @component(components/title)
   <h2>Componentes</h2>
   <h3>Router</h3>
   <p>El router es el sistema de navegación de la web. El .htaccess garantiza que, sea cual sea la petición, siempre se llamará a &quot;/index.php&quot;. El router es quien toma la ruta solicitada y adquiere sus contenidos. Para ello, es necesario dar de alta las rutas en el fichero &quot;routes.php&quot;.</p>
