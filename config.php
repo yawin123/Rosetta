@@ -17,3 +17,6 @@
 
   /* IDIOMA POR DEFECTO */
     $GLOBALS['LANG'] = 'es';
+
+    /* MISC OPTIONS */
+    $GLOBALS['ROOT_PATH'] = '/';

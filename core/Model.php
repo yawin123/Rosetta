@@ -108,7 +108,6 @@
                     BD::getInstance()->prepare(self::$query);
                     $query_result = BD::getInstance()->execPreparedQuery([]);
 
-
                 //Si hay error lo mostramos y abortamos ejecución
                     if($query_result){echo $query_result; die();}
 
@@ -128,6 +127,10 @@
         //SECCIÓN ESTÁTICA
 
         private static $query = ""; //Query a ejecutar
+        public static function exposeQuery()
+        {
+          return self::$query;
+        }
 
         //Función interna para limpiar la query
             private static function clearQuery()
@@ -158,16 +161,16 @@
         //Función para añadir una cláusula and where a la select (si esta no existe, la crea sin el and)
             public static function andwhere($field, $operator, $value)
             {
-                $and = " AND";
+                $and = "AND";
                 if(self::$query == "") //Si no hay query
                 {
                     self::_generateSelect(); //Generamos la select
-                    $and = "";
+                    $and = "WHERE";
                 }
 
                 //Añadimos la cláusula where
                     $val = BD::sanitize($value);
-                    self::$query = self::$query."$and WHERE $field $operator $val";
+                    self::$query = self::$query." $and $field $operator $val";
 
             }
 
@@ -200,13 +203,16 @@
                 $class = get_called_class(); //Obtenemos la clase a instanciar
 
                 //Para cada fila obtenida
-                    foreach($query_result as $qr)
-                    {
-                        $m = new $class(); //Instanciamos el modelo
-                        $m->setValues($qr); //Volcamos sus datos
-                        $m->inBDFlag = true; //Activamos el flag de la BD
-                        array_push($retorno, $m); //Añadimos el modelo a la lista de retorno
-                    }
+                  if(!empty($query_result))
+                  {
+                      foreach($query_result as $qr)
+                      {
+                          $m = new $class(); //Instanciamos el modelo
+                          $m->setValues($qr); //Volcamos sus datos
+                          $m->inBDFlag = true; //Activamos el flag de la BD
+                          array_push($retorno, $m); //Añadimos el modelo a la lista de retorno
+                      }
+                  }
 
                 self::$query = "";
                 return $retorno; //Devolvemos la lista de retorno
@@ -215,6 +221,9 @@
         //Función que devuelve el primer modelo que coincida con la select
             public static function first()
             {
-                return self::get()[0]; //Devolvemos el modelo
+                $model_list = self::get();
+
+                //Devolvemos el modelo
+                  return (!empty($model_list)) ? $model_list[0] : NULL;
             }
     }
