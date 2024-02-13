@@ -6,7 +6,7 @@
 
 class FileManager
 {
-  private static $root = "/uploads/"; //Ruta raíz del sistema de ficheros
+  private static $root = "./uploads/"; //Ruta raíz del sistema de ficheros
   private static $path = ""; //Ruta a la que apunta el sistema de ficheros
 
   //FileManager es singleton
