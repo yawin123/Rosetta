@@ -69,13 +69,14 @@
   <br/>
   <h3>View</h3>
   <p>View es el sistema de vistas y plantillas que se ha implementado para facilitar la tarea de implementar la interfaz de la aplicación web.</p>
-  <p>Por el momento, el sistema incluye cuatro directivas que pueden añadirse a las vistas y plantillas:</p>
+  <p>Por el momento, el sistema incluye seis directivas que pueden añadirse a las vistas y plantillas:</p>
 
   <ul>
     <li><strong>&#64;extend(plantilla):</strong> indica que la vista o plantilla hereda de la plantilla indicada.</li>
     <li><strong>&#64;yield(contenido):</strong> indica que en ese lugar se colocará el contenido de una sección con ese nombre.</li>
     <li><strong>&#64;section(contenido):</strong> indica el inicio de una sección con ese nombre.</li>
     <li><strong>&#64;endsection(contenido):</strong> indica el final de una sección con ese nombre.</li>
+    <li><strong>&#64;component(contenido):</strong> incrusta en el lugar de la directiva el contenido de la vista indicada.</li>
     <li><strong>&#64;crlf:</strong> genera el input oculto con el token de SecPOST. <em>Es obligatorio incluirlo en todo formulario cuyo action llame a una ruta SecPOST.</em></li>
   </ul>
 

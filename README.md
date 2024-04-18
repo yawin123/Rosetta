@@ -92,6 +92,7 @@ Por el momento, el sistema incluye cuatro directivas que pueden añadirse a las 
  * **@yield(contenido):** indica que en ese lugar se colocará el contenido de una sección con ese nombre.
  * **@section(contenido):** indica el inicio de una sección con ese nombre.
  * **@endsection(contenido):** indica el final de una sección con ese nombre.
+ * **@component(contenido):** incrusta en el lugar de la directiva el contenido de la vista indicada.
  * **@crlf:** genera el input oculto con el token de SecPOST. *Es obligatorio incluirlo en todo formulario cuyo action llame a una ruta SecPOST.*
 
 #### Funciones de View

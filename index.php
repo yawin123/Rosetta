@@ -12,7 +12,7 @@
 		    {
 			    foreach($dh as $file)
 			    {
-				    if(is_file($ruta . $file) && $file!="." && $file!="..")
+				    if(is_file($ruta.$file) && $file!="." && $file!="..")
 				    {
 					    require_once($ruta.$file);
 				    }
