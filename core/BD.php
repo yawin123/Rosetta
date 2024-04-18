@@ -2,7 +2,6 @@
 /*
 Este fichero contiene el código relacionado con la base de datos.
 */
-
   class BD
   {
     private $bd = array(), $bd_conf = array();
@@ -36,21 +35,21 @@ Este fichero contiene el código relacionado con la base de datos.
         switch($_engine)
         {
           case "mysql":
-            //Se abre la conexión
-            $this->bd[$bd_name] = new PDO("mysql:dbname=".$bd_name.";host=".$_bd, $_user, $_pass, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+          //Se abre la conexión
+          $this->bd[$bd_name] = new PDO("mysql:dbname=".$bd_name.";host=".$_bd, $_user, $_pass, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
 
-            //Se guarda la configuración
-            $this->bd_conf[$bd_name] = "mysql:dbname=".$bd_name.";host=".$_bd.":".$_user.":".$_pass;
-            break;
+          //Se guarda la configuración
+          $this->bd_conf[$bd_name] = "mysql:dbname=".$bd_name.";host=".$_bd.":".$_user.":".$_pass;
+          break;
 
           case "sqlite":
-            //Se abre la conexión
-            $this->bd[$bd_name] = new PDO("sqlite:".$bd_name);
+          //Se abre la conexión
+          $this->bd[$bd_name] = new PDO("sqlite:".$bd_name);
 
-            //Se guarda la configuración
-            $this->bd_conf[$bd_name] = "sqlite:".$bd_name;
+          //Se guarda la configuración
+          $this->bd_conf[$bd_name] = "sqlite:".$bd_name;
 
-            break;
+          break;
         }
       }
     }

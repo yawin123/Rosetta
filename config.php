@@ -8,7 +8,7 @@
   /* DATOS DE CONEXIÓN DE LA BASE DE DATOS */
     $GLOBALS['BD_ENABLED'] = false;
 
-    $GLOBALS['BD_ENGINE'] = ""; // mysql | sqlite
+    $GLOBALS['BD_ENGINE'] = ""; //Engines: mysql | sqlite
     $GLOBALS['BD_NAME'] = '';
 
     $GLOBALS['BD_SERVER'] = "";
@@ -31,7 +31,7 @@
     $GLOBALS['ERROR_REPORTING_LEVEL'] = E_ALL;
 
   /* IDIOMA POR DEFECTO */
-    $GLOBALS['LANG'] = 'es';
+    $GLOBALS['lang'] = 'es';
 
-    /* MISC OPTIONS */
+  /* MISC OPTIONS */
     $GLOBALS['ROOT_PATH'] = '/';
