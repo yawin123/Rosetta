@@ -17,6 +17,8 @@
                                  //se guarda el puntero al Content de la misma.
         public $content = ""; //Aquí se guarda el resultado de evaluar el contenido
 
+        private $regexp = "[A-Za-z0-9]+(\/[A-Za-z0-9]+)?";
+
         //Función auxiliar para extraer el texto contenido en los paréntesis de las directivas
             private function getParentesisCont($text)
             {
@@ -50,12 +52,32 @@
               {
                 $this->content = str_replace("@crlf", "<input hidden name='crlf' value='".crlf()."'/>", $this->content);
               }
+            //Si incluye el comando @component, los renderizamos
+              $components = [];
+              $components_rendered = [];
+
+              if(preg_match("/@component\(".$this->regexp."\)/", $this->content, $components))
+              {
+                foreach($components as $component) //Para cada una
+                {
+                    $cname = $this->getParentesisCont($component); //Obtenemos el nombre
+
+                    //Si no está renderizado, lo Renderizamos
+                    if($components_rendered[$cname] == null)
+                    {
+                      $components_rendered[$cname] = new Content($cname, $args, null);
+                    }
+
+                    //Sustituimos el string "@component(nombre-del-componente)" por el contenido del componente
+                        $this->content = str_replace("@component($cname)", $components_rendered[$cname]->content, $this->content);
+                }
+              }
             //Si tenemos hijo, miramos si hay yields y si los hay, los obtenemos
                 if($child != null)
                 {
                     $yields = [];
                     //Buscamos directivas "@yield"
-                        if(preg_match("/@yield\([A-Za-z]+\)/", $this->content, $yields))
+                        if(preg_match("/@yield\(".$this->regexp."\)/", $this->content, $yields))
                         {
                             //Si las encontramos
                             foreach($yields as $y) //Para cada una
@@ -70,7 +92,7 @@
             //Trabajamos las secciones, si las hay
                 $sections = [];
                 //Buscamos las secciones
-                    if(preg_match("/@section\([A-Za-z]+\)/", $this->content, $sections))
+                    if(preg_match("/@section\(".$this->regexp."\)/", $this->content, $sections))
                     {
                         //Si las encontramos
                         foreach($sections as $s) //Para cada una
@@ -88,7 +110,7 @@
 
                 $template = [];
                 //Si extiende un template, lo obtenemos
-                if(preg_match("/@extends\([A-Za-z]+\)/", $this->content, $template))
+                if(preg_match("/@extends\(".$this->regexp."\)/", $this->content, $template))
                 {
                     //Y creamos un nuevo content con ese fichero, pasándole un puntero al contenido hijo y los argumentos.
                         $this->template = new Content($this->getParentesisCont($template[0]), $args, $this);
