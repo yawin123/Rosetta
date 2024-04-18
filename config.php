@@ -34,4 +34,4 @@
     $GLOBALS['lang'] = 'es';
 
   /* MISC OPTIONS */
-    $GLOBALS['ROOT_PATH'] = '/';
+    $GLOBALS['ROOT_PATH'] = '';
