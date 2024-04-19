@@ -72,6 +72,19 @@
         $_SESSION['session'] = serialize($session);
       }
 
+      public static function Stop()
+      {
+        $ses = self::getSession();
+        if($ses != null)
+        {
+          self::where("userid", "=", $ses->userid);
+          $session = self::first();
+          $session->delete();
+
+          unset($_SESSION['session']);
+        }
+      }
+
       public static function autenticated()
       {
         $session = self::getSession();
@@ -146,6 +159,17 @@
     public function leave()
     {
       BD::getInstance()->setSelected($this->oldBD);
+    }
+
+    public function deautenticate()
+    {
+      $this->prepare();
+      if($this->autenticated())
+      {
+        AuthorizationSession::Stop();
+      }
+
+      $this->leave();
     }
 
     public function autenticate($username, $pass)
