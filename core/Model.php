@@ -182,9 +182,27 @@
                     self::_generateSelect(); //Generamos la select
                 }
 
-                //Añadimos la cláusula where
+                //Añadimos la cláusula
                     self::$query = self::$query." ORDER BY $field $order";
 
+            }
+
+        //Función para paginar la petición
+            public static function paginate($pagesize, $pageindex = -1)
+            {
+                if(self::$query == "") //Si no hay query
+                {
+                    self::_generateSelect(); //Generamos la select
+                }
+
+                //Añadimos la cláusula
+                    self::$query = self::$query." LIMIT $pagesize";
+
+                if($pageindex >= 0)
+                {
+                  //Añadimos la cláusula
+                    self::$query = self::$query." OFFSET ".$pageindex*$pagesize;
+                }
             }
 
         //Función para recuperar la lista de modelos que resulten de la ejecución de la query
