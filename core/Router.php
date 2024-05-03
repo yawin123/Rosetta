@@ -219,7 +219,7 @@
                             }
 
                         //Si llegamos aquí es que no ha habido coincidencias
-                            $this->active_route_name = "";
+                            $me->active_route_name = "";
                             fail();
                     }
             }
