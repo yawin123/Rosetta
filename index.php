@@ -2,33 +2,60 @@
 /*
     Este fichero contiene el código de la aplicación web.
 */
-    session_start();
-    function load_path($rut)
+  session_start();
+  function load_path($rut)
+  {
+    $ruta = "./".$rut."/";
+    if(is_dir($ruta))
     {
-	    $ruta = "./".$rut."/";
-	    if(is_dir($ruta))
-	    {
-		    if($dh = scandir($ruta))
-		    {
-			    foreach($dh as $file)
-			    {
-				    if(is_file($ruta.$file) && $file!="." && $file!="..")
-				    {
-					    require_once($ruta.$file);
-				    }
-			    }
-		    }
-	    }
+      if($dh = scandir($ruta))
+      {
+        foreach($dh as $file)
+        {
+          if(is_file($ruta.$file) && $file!="." && $file!="..")
+          {
+            require_once($ruta.$file);
+          }
+        }
+      }
     }
+  }
 
-  include_once "config.php";
+  //Cargamos configuración
+    include_once "config.php";
 
-	load_path("core");
+  //Establecemos display de errores
+  	if(isset($GLOBALS['ERROR_REPORTING_LEVEL']) && $GLOBALS['ERROR_REPORTING_LEVEL'] > 0)
+    {
+      error_reporting($GLOBALS['ERROR_REPORTING_LEVEL']);
+      ini_set('display_errors', 1);
+      ini_set('display_startup_errors', 1);
+    }
+  	else
+  	{
+  		ini_set('display_errors', 0);
+  		ini_set('display_startup_errors', 0);
+  		error_reporting(0);
+  	}
 
-	load_path("models");
-	load_path("controllers");
+  //Cargamos el framework
+	  load_path("core");
 
-  include_once "routes.php";
+  //Cargamos los modelos
+	  load_path("models");
 
-  Router::resolve();
+  //Cargamos los controladores
+	  load_path("controllers");
+
+  //Cargamos los recursos adicionales
+    load_path("resources");
+
+  //Cargamos las rutas
+    include_once "routes.php";
+
+  //Cargamos las rutas
+    include_once "initializer.php";
+
+  //Resolvemos la ruta
+    Router::resolve();
 ?>

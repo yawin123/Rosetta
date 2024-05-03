@@ -12,6 +12,7 @@
 
         private $routes;    //Array donde se almacenan las rutas
         private $route_names; //Array donde se relacionan las rutas con nombres
+        private $active_route_name = ""; //Nombre de la ruta activa
 
         //Router es singleton
             private static $instance = null;
@@ -144,6 +145,9 @@
                 //Si existe la ruta requerida
                     if(array_key_exists($me->route_path, $me->routes[$me->method]))
                     {
+                        //Guardamos el nombre de la ruta
+                          $me->active_route_name = array_search($me->route_path, $me->route_names);
+
                         //Se llama a su callback
                         echo call_user_func($me->routes[$me->method][$me->route_path]);
                     }
@@ -154,34 +158,34 @@
                             $route_path = $me->route_path;
                             if($route_path[0] == '/'){$route_path = substr($route_path, 1);}
                             if($route_path[strlen($route_path)-1] == "/"){$route_path = substr($route_path, 0, strlen($route_path)-1);}
-                            
+
                         //Si es raíz, no habrá coincidencias, así que se devuelve fallo
                             if($route_path == ""){fail();}
-                            
+
                         //Se divide la ruta en pedazos
                             $args = explode("/", $route_path);
                             $nargs = count($args);
-                            
+
                         //Para cada ruta del método
                             foreach($me->routes[$me->method] as $route => $callback)
                             {
                                 //Limpiamos la ruta
                                     $r = $route;
                                     if($r[0] == '/'){$r = substr($r, 1);}
-                                    
+
                                 //Si no es raíz
                                     if($r != "")
                                     {
                                         //Dividimos la ruta en pedazos
                                             $req_args = explode("/", $r);
                                             $n_req_args = count($req_args);
-                                            
+
                                         //Si coinciden en número de argumentos
                                             if($n_req_args == $nargs)
                                             {
                                                 $argumentos = array();
                                                 $match = true;
-                                                
+
                                                 //Para cada argumento
                                                     for($i = 0; $i < $n_req_args; $i++)
                                                     {
@@ -191,7 +195,7 @@
                                                                 $arg = substr($req_args[$i], 1);
                                                                 $arg = substr($arg, 0, strlen($arg)-1);
                                                                 $argumentos[$arg] = $args[$i];
-                                                                
+
                                                             }
                                                         //Si el argumento es una constante, miramos si coinciden
                                                             else if($req_args[$i] != $args[$i])
@@ -200,25 +204,35 @@
                                                                 break;
                                                             }
                                                     }
-                                                    
+
                                                 //Si hay coincidencia
                                                     if($match)
                                                     {
+                                                        //Guardamos el nombre de la ruta
+                                                          $me->active_route_name = array_search($route, $me->route_names);
+
                                                         echo call_user_func_array($callback, $argumentos);
                                                         return;
                                                     }
                                             }
                                     }
                             }
-                            
+
                         //Si llegamos aquí es que no ha habido coincidencias
+                            $this->active_route_name = "";
                             fail();
                     }
             }
-            
+
         //Para saber dónde estamos
          public static function getRoutePath()
          {
-             return self::getInstance()->route_path;   
+             return self::getInstance()->route_path;
+         }
+
+       //Para saber si la ruta actual es la indicada
+         public static function isActualPath($route_name)
+         {
+           return (self::getInstance()->active_route_name == $route_name);
          }
     }
