@@ -44,16 +44,7 @@
 
             if(ob_get_length() > 0) ob_clean(); //Limpiamos el buffer por si estuviera sucio
 
-            if($evaluate)
-            {
-              include_once "./views/".$view_name.".view"; //Incluimos la vista o plantilla
-              $this->content = ob_get_contents(); //Obtenemos el contenido evaluado
-              ob_clean(); //Limpiamos el buffer para dejarlo listo
-            }
-            else
-            {
-              $this->content = file_get_contents("./views/".$view_name.".view");
-            }
+            $this->content = file_get_contents("./views/".$view_name.".view");
 
             //Si tenemos hijo, miramos si hay yields y si los hay, los obtenemos
               if($child != null)
