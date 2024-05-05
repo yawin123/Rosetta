@@ -70,4 +70,15 @@
                         die();  //Y se aborta el resto de la ejecución
                     }
             }
+
+            public static function hasRequiredFields($args)
+            {
+                //Si la función auxiliar nos indica que uno de los requisitos falla
+                    if(!self::getInstance()->_required($args))
+                    {
+                        return false;
+                    }
+
+                return true;
+            }
     }
