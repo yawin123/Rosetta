@@ -29,6 +29,11 @@
                     $this->table = strtolower(get_called_class())."s";
             }
 
+            public function getClassName()
+            {
+              return strtolower(get_called_class());
+            }
+
         //Función que inserta o actualiza el modelo en la base de datos
             public function save()
             {
