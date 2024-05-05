@@ -34,7 +34,7 @@
                 return $cont;
             }
 
-        public function __construct($view_name, $args, $child = null)
+        public function __construct($view_name, $args, $child = null, $evaluate = true)
         {
             //Si hay argumentos los extraemos para que el código de este view pueda usarlos
                 if(sizeof($args) > 0)
@@ -42,60 +42,87 @@
                     extract($args); //Extract importa variables a la tabla de símbolos actual desde un array
                 }
 
-            ob_clean(); //Limpiamos el buffer por si estuviera sucio
-            include_once "./views/".$view_name.".view"; //Incluimos la vista o plantilla
-            $this->content = ob_get_contents(); //Obtenemos el contenido evaluado
-            ob_clean(); //Limpiamos el buffer para dejarlo listo
+            if(ob_get_length() > 0) ob_clean(); //Limpiamos el buffer por si estuviera sucio
+
+            if($evaluate)
+            {
+              include_once "./views/".$view_name.".view"; //Incluimos la vista o plantilla
+              $this->content = ob_get_contents(); //Obtenemos el contenido evaluado
+              ob_clean(); //Limpiamos el buffer para dejarlo listo
+            }
+            else
+            {
+              $this->content = file_get_contents("./views/".$view_name.".view");
+            }
+
+            //Si tenemos hijo, miramos si hay yields y si los hay, los obtenemos
+              if($child != null)
+              {
+                  $yields = [];
+                  //Buscamos directivas "@yield"
+                      if(preg_match_all("/@yield\(".$this->regexp."\)/", $this->content, $yields))
+                      {
+                          //Si las encontramos
+                          foreach($yields[0] as $y) //Para cada una
+                          {
+                              $yname = $this->getParentesisCont($y); //Obtenemos el nombre
+                              //Sustituimos el string "@yield(nombre-del-yield)" por el contenido de la sección de su hijo
+                                  $this->content = str_replace("@yield($yname)", $child->sections[$yname], $this->content);
+                          }
+                      }
+              }
 
             //Si incluye el comando @crlf lo reemplazamos por un input hidden con su valor
               if(preg_match("/@crlf/", $this->content, $tmp))
               {
                 $this->content = str_replace("@crlf", "<input hidden name='crlf' value='".crlf()."'/>", $this->content);
               }
+
+            //Si incluye el comando @rawcomponent, los incrustamos
+              $rawcomponents = [];
+              $rawcomponents_rendered = [];
+
+              if(preg_match_all("/@rawcomponent\(".$this->regexp."\)/", $this->content, $rawcomponents))
+              {
+                foreach($rawcomponents[0] as $rawcomponent) //Para cada una
+                {
+                  $cname = $this->getParentesisCont($rawcomponent); //Obtenemos el nombre
+
+                  //Si no está renderizado, lo Renderizamos
+                    if(!array_key_exists($cname, $rawcomponents_rendered))
+                    {
+                      $rawcomponents_rendered[$cname] = new Content($cname, $args, null, false);
+
+                      //Sustituimos el string "@component(nombre-del-componente)" por el contenido del componente
+                        $this->content = str_replace("@rawcomponent($cname)", $rawcomponents_rendered[$cname]->content, $this->content);
+                    }
+                }
+              }
+
             //Si incluye el comando @component, los renderizamos
               $components = [];
               $components_rendered = [];
 
-              if(preg_match("/@component\(".$this->regexp."\)/", $this->content, $components))
+              if(preg_match_all("/@component\(".$this->regexp."\)/", $this->content, $components))
               {
-                foreach($components as $component) //Para cada una
+                foreach($components[0] as $component) //Para cada una
                 {
                     $cname = $this->getParentesisCont($component); //Obtenemos el nombre
-
-                    //Si no está renderizado, lo Renderizamos
-                    if($components_rendered[$cname] == null)
-                    {
-                      $components_rendered[$cname] = new Content($cname, $args, null);
-                    }
+                    $content = new Content($cname, $args, null);
 
                     //Sustituimos el string "@component(nombre-del-componente)" por el contenido del componente
-                        $this->content = str_replace("@component($cname)", $components_rendered[$cname]->content, $this->content);
+                        $this->content = str_replace("@component($cname)", $content->content, $this->content);
                 }
               }
-            //Si tenemos hijo, miramos si hay yields y si los hay, los obtenemos
-                if($child != null)
-                {
-                    $yields = [];
-                    //Buscamos directivas "@yield"
-                        if(preg_match("/@yield\(".$this->regexp."\)/", $this->content, $yields))
-                        {
-                            //Si las encontramos
-                            foreach($yields as $y) //Para cada una
-                            {
-                                $yname = $this->getParentesisCont($y); //Obtenemos el nombre
-                                //Sustituimos el string "@yield(nombre-del-yield)" por el contenido de la sección de su hijo
-                                    $this->content = str_replace("@yield($yname)", $child->sections[$yname], $this->content);
-                            }
-                        }
-                }
 
             //Trabajamos las secciones, si las hay
                 $sections = [];
+
                 //Buscamos las secciones
-                    if(preg_match("/@section\(".$this->regexp."\)/", $this->content, $sections))
+                    if(preg_match_all("/@section\(".$this->regexp."\)/", $this->content, $sections))
                     {
                         //Si las encontramos
-                        foreach($sections as $s) //Para cada una
+                        foreach($sections[0] as $s) //Para cada una
                         {
                             $sname = $this->getParentesisCont($s); //Obtenemos su nombre
 
@@ -107,6 +134,14 @@
                                 $this->sections[$sname] = substr($this->content, $start, $end);
                         }
                     }
+
+                if($evaluate)
+                {
+                  if(ob_get_length() > 0) ob_clean(); //Limpiamos el buffer por si estuviera sucio
+                  eval("?>".$this->content);
+                  $this->content = ob_get_contents();
+                  ob_clean();
+                }
 
                 $template = [];
                 //Si extiende un template, lo obtenemos
@@ -121,13 +156,13 @@
         //o el de una plantilla padre
             private function doRend()
             {
-                return ($this->template) ? $this->template->doRend() : $this->content;
+              return ($this->template) ? $this->template->doRend() : $this->content;
             }
 
         //Función que renderiza el contenido de la vista
             public function render()
             {
-                ob_clean(); //Limpiamos el buffer por si estuviera sucio
+                if(ob_get_length() > 0) ob_clean(); //Limpiamos el buffer por si estuviera sucio
                 echo $this->doRend(); //Renderizamos la vista
                 return ob_get_clean(); //Devolvemos el contenido del buffer
             }
