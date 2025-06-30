@@ -21,7 +21,7 @@
 
           <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-              <a id="nav-outline-button" class="nav-link btn btn-sm btn-outline-light" href="https://git.yawin.es/personal/rosetta.git" target="_blank">Repositorio</a>
+              <a id="nav-outline-button" class="nav-link btn btn-sm btn-outline-light" href="<? echo Router::path("repo");?>" target="_blank">Repositorio</a>
             </li>
           </ul>
         </nav>
@@ -34,10 +34,10 @@
           <hr/>
           <div class="row">
             <div class="col-md-6 text-left">
-              <a style="text-decoration:none; color:#333333;" href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank" title="GNU General Public License v3.0">GNU GPL v3.0</a> - Rosetta
+              <a style="text-decoration:none; color:#333333;" href="<? echo Router::path("license");?>" target="_blank" title="GNU General Public License v3.0">GNU GPL v3.0</a> - Rosetta
             </div>
             <div class="col-md-6 text-right">
-              <a style="text-decoration:none; color:#333333;" href="https://miguelalbors.es" target="_blank" title="Currículum vitae">Miguel Albors Iruretagoyena</a>
+              <a style="text-decoration:none; color:#333333;" href="<? echo Router::path("author");?>" target="_blank" title="Currículum vitae">Miguel Albors Iruretagoyena</a>
             </div>
           </div>
         </footer>
