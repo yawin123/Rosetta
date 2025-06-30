@@ -21,7 +21,7 @@
 
           <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-              <a id="nav-outline-button" class="nav-link btn btn-sm btn-outline-light" href="https://gitlab.com/yawin/rosetta" target="_blank">Repositorio</a>
+              <a id="nav-outline-button" class="nav-link btn btn-sm btn-outline-light" href="https://git.yawin.es/personal/rosetta.git" target="_blank">Repositorio</a>
             </li>
           </ul>
         </nav>
