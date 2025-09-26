@@ -140,6 +140,9 @@ class Model
         {
             if(in_array($k, $this->columns)) $this->$k = $v;
         }
+
+        //Fix if id on joins
+        $this->id = $values[0];
     }
 
     //SECCIÓN ESTÁTICA
