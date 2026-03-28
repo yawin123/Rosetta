@@ -4,6 +4,7 @@
     es la que almacena todo lo relacionado con los requests.
 */
 
+    #[AllowDynamicProperties]
     class Request
     {
         //Request es singleton

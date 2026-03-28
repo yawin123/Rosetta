@@ -4,6 +4,7 @@
     de la aplicación. Permite subir, descargar y eliminar ficheros.
 */
 
+#[AllowDynamicProperties]
 class FileManager
 {
   private static $root = "./uploads/"; //Ruta raíz del sistema de ficheros

@@ -5,6 +5,7 @@
  *    de includes.
  */
 
+#[AllowDynamicProperties]
 class Router
 {
     private $route_path;   //Path al que se quiere acceder. Es un array.

@@ -3,6 +3,7 @@
  *    Este fichero contiene el código relacionado con la clase Model.
  */
 
+#[AllowDynamicProperties]
 class Model
 {
     private $inBDFlag = false; //Flag que indica si este modelo proviene de la base de datos

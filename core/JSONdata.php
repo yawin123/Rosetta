@@ -4,6 +4,7 @@
     para abstraer del uso de ficheros JSON.
 */
 
+#[AllowDynamicProperties]
 class JSONData
 {
   public function __construct($file = "")

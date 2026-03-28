@@ -9,6 +9,7 @@
     @endsection(contenido) -> indica el final de una sección con ese nombre
 */
 
+    #[AllowDynamicProperties]
     class Content
     {
         public $sections = array(); //Aquí se guardan las secciones de la vista
@@ -169,6 +170,14 @@
 
             return $contenido->render(); //Devolvemos el resultado de la renderización
         }
+
+    //Función para mostrar un json
+        function viewData($data)
+        {
+            header('Content-Type: application/json; charset=utf-8');
+            return json_encode($data);
+        }
+
 
     //Función para redirigir a otra url
         function redirect($path)

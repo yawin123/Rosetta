@@ -3,6 +3,7 @@
 Este fichero contiene el código relacionado con la base de datos.
 */
 
+  #[AllowDynamicProperties]
   class BD
   {
     private $bd = array(), $bd_conf = array();
