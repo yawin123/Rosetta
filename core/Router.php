@@ -153,13 +153,55 @@ class Router
 
     public static function path($route_name, $vars = array())
     {
-        $path = self::getInstance()->route_names[$route_name];
+        $route_names = self::getInstance()->route_names;
+        
+        if(!array_key_exists($route_name, $route_names))
+        {
+            return $GLOBALS['ROOT_PATH']."/redirect/".$route_name;
+        }
+        
+        $path = $route_names[$route_name];
 
         if(self::isRealPath($path))
         {
+            // Sustituir variables {var} por valores del array
+            foreach($vars as $key => $value)
+            {
+                // Si es un número, sustituye en orden
+                if(is_numeric($key))
+                {
+                    // Buscar la siguiente variable {var} en la ruta
+                    if(preg_match('/\{[^}]+\}/', $path, $matches))
+                    {
+                        $path = preg_replace('/\{[^}]+\}/', $value, $path, 1);
+                    }
+                }
+                // Si es una cadena, sustituye por nombre
+                else
+                {
+                    $path = str_replace('{' . $key . '}', $value, $path);
+                }
+            }
+
+            // Si quedan variables sin sustituir, añadir como parámetros GET
+            if(preg_match_all('/\{([^}]+)\}/', $path, $missing_vars))
+            {
+                foreach($missing_vars[1] as $var)
+                {
+                    $path .= (strpos($path, '?') === false) ? "?" : "&";
+                    $path .= $var . "=";
+                }
+            }
+
+            // Añadir variables restantes como parámetros GET
             $i = 0;
             foreach($vars as $k => $v)
             {
+                if(!is_numeric($k))
+                {
+                    // Ya se sustituyó, saltar
+                    continue;
+                }
                 $path = ($i > 0) ? $path."&" : $path."?"; $i++;
                 $path = $path.$k."=".$v;
             }

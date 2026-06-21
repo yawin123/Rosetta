@@ -38,7 +38,8 @@ Este fichero contiene el código relacionado con la base de datos.
         {
           case "mysql":
             //Se abre la conexión
-            $this->bd[$bd_name] = new PDO("mysql:dbname=".$bd_name.";host=".$_bd, $_user, $_pass, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+            $initCommand = Pdo\Mysql::ATTR_INIT_COMMAND;
+            $this->bd[$bd_name] = new PDO("mysql:dbname=".$bd_name.";host=".$_bd, $_user, $_pass, array($initCommand => "SET NAMES utf8"));
 
             //Se guarda la configuración
             $this->bd_conf[$bd_name] = "mysql:dbname=".$bd_name.";host=".$_bd.":".$_user.":".$_pass;
