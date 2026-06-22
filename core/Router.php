@@ -52,7 +52,6 @@ class Router
         // Informamos a Request de las variables GET
         Request::addMember($_GET);
 
-
         $this->method = $_SERVER['REQUEST_METHOD']; //Obtenemos el método
         if($this->method == "POST")
         {
@@ -66,6 +65,11 @@ class Router
                 $this->method = "SecPOST";
             }
         }
+        else if ($this->method == 'PUT')
+        {
+            parse_str(file_get_contents('php://input'), $_PUT);
+            Request::addMember($_PUT);
+        }
 
         //Si hay ficheros en la llamada
         if(isset($_FILES) && !empty($_FILES))
@@ -74,7 +78,7 @@ class Router
         }
 
         //Inicializamos los arrays de rutas y nombres
-        $this->routes = ["GET" => array(), "POST" => array(), "SecPOST" => array()];
+        $this->routes = ["GET" => array(), "POST" => array(), "SecPOST" => array(), "PUT" => array(), "DELETE" => array()];
         $this->route_names = array();
 
         //Inicializamos el token para el método PUT
@@ -118,11 +122,37 @@ class Router
         }
     }
 
-    //Función para dar de alta una ruta PUT
+    //Función para dar de alta una ruta SecPOST
     public static function secpost($route, $callback, $name = "")
     {
         //Asociamos la ruta con su callback
         self::getInstance()->routes["SecPOST"][$route] = $callback;
+
+        if($name != "") //Si se ha indicado nombre
+        {
+            //Asociamos el nombre a la ruta
+            self::getInstance()->route_names[$name] = $route;
+        }
+    }
+
+    //Función para dar de alta una ruta PUT
+    public static function put($route, $callback, $name = "")
+    {
+        //Asociamos la ruta con su callback
+        self::getInstance()->routes["PUT"][$route] = $callback;
+
+        if($name != "") //Si se ha indicado nombre
+        {
+            //Asociamos el nombre a la ruta
+            self::getInstance()->route_names[$name] = $route;
+        }
+    }
+
+    //Función para dar de alta una ruta DELETE
+    public static function delete($route, $callback, $name = "")
+    {
+        //Asociamos la ruta con su callback
+        self::getInstance()->routes["DELETE"][$route] = $callback;
 
         if($name != "") //Si se ha indicado nombre
         {
@@ -154,12 +184,12 @@ class Router
     public static function path($route_name, $vars = array())
     {
         $route_names = self::getInstance()->route_names;
-        
+
         if(!array_key_exists($route_name, $route_names))
         {
             return $GLOBALS['ROOT_PATH']."/redirect/".$route_name;
         }
-        
+
         $path = $route_names[$route_name];
 
         if(self::isRealPath($path))
@@ -272,7 +302,6 @@ class Router
                                 $arg = substr($req_args[$i], 1);
                                 $arg = substr($arg, 0, strlen($arg)-1);
                                 $argumentos[$arg] = $args[$i];
-
                             }
                             //Si el argumento es una constante, miramos si coinciden
                             else if($req_args[$i] != $args[$i])
