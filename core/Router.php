@@ -38,6 +38,7 @@ class Router
 
         //Cocinamos la ruta
         $this->route_path = $tmp[0];
+        if($this->route_path == ""){$this->route_path = "/";}
 
         /*
          *                    Esto iba a usarlo para poder hacer paths tipo:
@@ -52,6 +53,7 @@ class Router
         // Informamos a Request de las variables GET
         Request::addMember($_GET);
 
+
         $this->method = $_SERVER['REQUEST_METHOD']; //Obtenemos el método
         if($this->method == "POST")
         {
@@ -63,12 +65,9 @@ class Router
             {
                 //Cambiamos el método a SecPOST
                 $this->method = "SecPOST";
+                //Regeneramos el token para que no pueda reutilizarse
+                $_SESSION['crlf'] = rand();
             }
-        }
-        else if ($this->method == 'PUT')
-        {
-            parse_str(file_get_contents('php://input'), $_PUT);
-            Request::addMember($_PUT);
         }
 
         //Si hay ficheros en la llamada
@@ -78,7 +77,7 @@ class Router
         }
 
         //Inicializamos los arrays de rutas y nombres
-        $this->routes = ["GET" => array(), "POST" => array(), "SecPOST" => array(), "PUT" => array(), "DELETE" => array()];
+        $this->routes = ["GET" => array(), "POST" => array(), "SecPOST" => array()];
         $this->route_names = array();
 
         //Inicializamos el token para el método PUT
@@ -122,37 +121,11 @@ class Router
         }
     }
 
-    //Función para dar de alta una ruta SecPOST
+    //Función para dar de alta una ruta PUT
     public static function secpost($route, $callback, $name = "")
     {
         //Asociamos la ruta con su callback
         self::getInstance()->routes["SecPOST"][$route] = $callback;
-
-        if($name != "") //Si se ha indicado nombre
-        {
-            //Asociamos el nombre a la ruta
-            self::getInstance()->route_names[$name] = $route;
-        }
-    }
-
-    //Función para dar de alta una ruta PUT
-    public static function put($route, $callback, $name = "")
-    {
-        //Asociamos la ruta con su callback
-        self::getInstance()->routes["PUT"][$route] = $callback;
-
-        if($name != "") //Si se ha indicado nombre
-        {
-            //Asociamos el nombre a la ruta
-            self::getInstance()->route_names[$name] = $route;
-        }
-    }
-
-    //Función para dar de alta una ruta DELETE
-    public static function delete($route, $callback, $name = "")
-    {
-        //Asociamos la ruta con su callback
-        self::getInstance()->routes["DELETE"][$route] = $callback;
 
         if($name != "") //Si se ha indicado nombre
         {
@@ -184,12 +157,12 @@ class Router
     public static function path($route_name, $vars = array())
     {
         $route_names = self::getInstance()->route_names;
-
+        
         if(!array_key_exists($route_name, $route_names))
         {
             return $GLOBALS['ROOT_PATH']."/redirect/".$route_name;
         }
-
+        
         $path = $route_names[$route_name];
 
         if(self::isRealPath($path))
@@ -244,6 +217,12 @@ class Router
         }
     }
 
+    //Función para obtener la ruta de un asset (imagen, CSS, JS) con el ROOT_PATH correcto
+    public static function asset($asset_path)
+    {
+        return $GLOBALS['ROOT_PATH'] . '/' . ltrim($asset_path, '/');
+    }
+
     //Función para resolver la ruta solicitada (llamada a callback)
     public static function resolve()
     {
@@ -263,8 +242,8 @@ class Router
         {
             //Preparamos la ruta
             $route_path = $me->route_path;
-            if($route_path[0] == '/'){$route_path = substr($route_path, 1);}
-            if($route_path[strlen($route_path)-1] == "/"){$route_path = substr($route_path, 0, strlen($route_path)-1);}
+            if(strlen($route_path) > 0 && $route_path[0] == '/'){$route_path = substr($route_path, 1);}
+            if(strlen($route_path) > 0 && $route_path[strlen($route_path)-1] == "/"){$route_path = substr($route_path, 0, strlen($route_path)-1);}
 
             //Si es raíz, no habrá coincidencias, así que se devuelve fallo
             if($route_path == ""){fail();}
@@ -302,6 +281,7 @@ class Router
                                 $arg = substr($req_args[$i], 1);
                                 $arg = substr($arg, 0, strlen($arg)-1);
                                 $argumentos[$arg] = $args[$i];
+
                             }
                             //Si el argumento es una constante, miramos si coinciden
                             else if($req_args[$i] != $args[$i])
@@ -317,9 +297,37 @@ class Router
                             //Guardamos el nombre de la ruta
                             $me->active_route_name = array_search($route, $me->route_names);
 
-                            echo call_user_func_array($callback, $argumentos);
+                            echo call_user_func_array($callback, array_values($argumentos));
                             return;
                         }
+                    }
+                }
+            }
+
+            //Si llegamos aquí es que no ha habido coincidencias con variables.
+            //Tercera pasada: wildcards (/*)
+            foreach($me->routes[$me->method] as $route => $callback)
+            {
+                // Si el patrón termina en /*
+                if(str_ends_with($route, '/*'))
+                {
+                    $prefix = ltrim(rtrim($route, '/*'), '/');  // "admin"
+
+                    // Coincide si es exactamente el prefijo O si empieza por prefijo/
+                    if($route_path === $prefix || str_starts_with($route_path, $prefix . '/'))
+                    {
+                        // Extraer el resto del path tras el prefijo
+                        if($route_path === $prefix) {
+                            $rest = '';
+                        } else {
+                            $rest = substr($route_path, strlen($prefix) + 1); // +1 para saltar la barra
+                        }
+
+                        // Guardamos el nombre de la ruta
+                        $me->active_route_name = array_search($route, $me->route_names);
+
+                        echo call_user_func($callback, $rest);
+                        return;
                     }
                 }
             }

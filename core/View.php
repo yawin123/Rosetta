@@ -18,7 +18,7 @@
                                  //se guarda el puntero al Content de la misma.
         public $content = ""; //Aquí se guarda el resultado de evaluar el contenido
 
-        private $regexp = "[A-Za-z0-9]+(\/[A-Za-z0-9]+)?";
+        private $regexp = "[A-Za-z0-9_]+(\/[A-Za-z0-9_]+)*";
 
         //Función auxiliar para extraer el texto contenido en los paréntesis de las directivas
             private function getParentesisCont($text)
@@ -91,21 +91,48 @@
                 }
               }
 
-            //Si incluye el comando @component, los renderizamos
-              $components = [];
-              $components_rendered = [];
-
-              if(preg_match_all("/@component\(".$this->regexp."\)/", $this->content, $components))
-              {
-                foreach($components[0] as $component) //Para cada una
-                {
-                    $cname = $this->getParentesisCont($component); //Obtenemos el nombre
-                    $content = new Content($cname, $args, null);
-
-                    //Sustituimos el string "@component(nombre-del-componente)" por el contenido del componente
-                        $this->content = str_replace("@component($cname)", $content->content, $this->content);
+            //Si incluye el comando @component, los convertimos en llamadas PHP
+            //que se ejecutarán durante eval(), cuando las variables de bucle ya existen.
+            //Sintaxis: @component(ruta)  o  @component(ruta, ['var' => $valor])
+            $offset = 0;
+            while (($pos = strpos($this->content, '@component(', $offset)) !== false) {
+                $depth = 0;
+                $start = $pos + 11; // strlen('@component(')
+                $end = $start;
+                for ($i = $start; $i < strlen($this->content); $i++) {
+                    if ($this->content[$i] === '(') $depth++;
+                    elseif ($this->content[$i] === ')') {
+                        if ($depth === 0) { $end = $i; break; }
+                        $depth--;
+                    }
                 }
-              }
+
+                $inner = substr($this->content, $start, $end - $start);
+                $fullMatch = substr($this->content, $pos, $end - $pos + 1);
+
+                // Buscar la primera coma fuera de corchetes/paréntesis
+                $bdepth = 0;
+                $commaPos = -1;
+                for ($i = 0; $i < strlen($inner); $i++) {
+                    if ($inner[$i] === '[' || $inner[$i] === '(') $bdepth++;
+                    elseif ($inner[$i] === ']' || $inner[$i] === ')') $bdepth--;
+                    elseif ($inner[$i] === ',' && $bdepth === 0) {
+                        $commaPos = $i;
+                        break;
+                    }
+                }
+
+                if ($commaPos >= 0) {
+                    $cname = var_export(trim(substr($inner, 0, $commaPos)), true);
+                    $phpCall = '<? __component(' . $cname . ', ' . substr($inner, $commaPos + 1) . '); ?>';
+                } else {
+                    $cname = var_export(trim($inner), true);
+                    $phpCall = '<? __component(' . $cname . ', get_defined_vars()); ?>';
+                }
+
+                $this->content = str_replace($fullMatch, $phpCall, $this->content);
+                $offset = $pos;
+            }
 
             //Trabajamos las secciones, si las hay
                 $sections = [];
@@ -160,6 +187,17 @@
             }
     }
 
+    //Función auxiliar para @component — se invoca desde dentro de eval()
+    //Permite que las variables de bucle (foreach) estén en scope.
+        function __component($cname, $args = [])
+        {
+            extract($args);
+            $content = file_get_contents("./views/{$cname}.view");
+            // Procesar @crlf: los componentes no pasan por Content, hay que hacerlo aquí
+            $content = str_replace("@crlf", "<input hidden name='crlf' value='".crlf()."'/>", $content);
+            eval("?>".$content);
+        }
+
     //Función para cargar una vista
         function view($view_name, $args = array())
         {
@@ -182,6 +220,11 @@
     //Función para redirigir a otra url
         function redirect($path)
         {
+            // Si es una ruta relativa (empieza por /), añadir ROOT_PATH si no está ya
+            if($path[0] == '/' && !str_starts_with($path, $GLOBALS['ROOT_PATH'] . '/') && $path !== $GLOBALS['ROOT_PATH'])
+            {
+                $path = $GLOBALS['ROOT_PATH'] . $path;
+            }
             return header('Location: ' . $path);
         }
 

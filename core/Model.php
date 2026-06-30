@@ -8,7 +8,7 @@ class Model
 {
     private $inBDFlag = false; //Flag que indica si este modelo proviene de la base de datos
     private $columns; //Nombre de las columnas del modelo
-    private $table; //Nombre de la tabla del modelo
+    protected $table = ""; //Nombre de la tabla del modelo
 
     private $autoincrementid;
 
@@ -29,7 +29,7 @@ class Model
         //Guardamos la lista de columnas
         $this->columns = $columns;
 
-        //Guardamos el nombre de la tabla
+        //Guardamos el nombre de la tabla (solo autogenerar si la subclase no lo ha definido)
         $this->table = strtolower(get_called_class())."s";
     }
 
@@ -52,7 +52,7 @@ class Model
             $primero = true;
             foreach($this->columns as $c)
             {
-                if($this->$c != "" && $c != "id")
+                if($c != "id")
                 {
                     if($primero){$primero = false;}
                     else {self::$query = self::$query.", ";}
@@ -77,7 +77,7 @@ class Model
             $value_part = "";
             foreach($this->columns as $c)
             {
-                if($this->$c != "" && ($c != "id" || !$this->autoincrementid) )
+                if($this->$c !== '' && ($c != "id" || !$this->autoincrementid) )
                 {
                     if($primero){$primero = false; self::$query = self::$query."(";}
                     else {self::$query = self::$query.", "; $value_part = $value_part.", ";}
@@ -137,33 +137,47 @@ class Model
     //Función auxiliar para volcar los datos de la tabla en el modelo
     public function setValues($values)
     {
+        // Nota: PDO::FETCH_BOTH devuelve claves tanto numéricas como asociativas.
+        // Usamos comparación estricta en in_array para evitar que claves numéricas (0, 1, …)
+        // coincidan por coerción de tipos con nombres de columna (0 == "id" en PHP).
         foreach($values as $k => $v)
         {
-            if(in_array($k, $this->columns)) $this->$k = $v;
+            if(is_string($k) && in_array($k, $this->columns, true)) $this->$k = $v;
         }
 
         //Fix if id on joins
-        $this->id = $values[0];
+        $this->id = $values['id'] ?? $values[0] ?? null;
     }
 
     //SECCIÓN ESTÁTICA
 
     private static $query = ""; //Query a ejecutar
+    private static $selectColumns = "*"; //Columnas a seleccionar (por defecto *)
+    private static $customFrom = null; //Tabla FROM personalizada (null = autogenerada)
     public static function exposeQuery()
     {
         return self::$query;
+    }
+
+    //Devuelve el nombre de la tabla de este modelo (en minúsculas, pluralizado)
+    public static function tableName()
+    {
+        return strtolower(get_called_class())."s";
     }
 
     //Función interna para limpiar la query
     private static function clearQuery()
     {
         self::$query = "";
+        self::$selectColumns = "*";
+        self::$customFrom = null;
     }
 
-    //Función auxiliar que genera una select * a la tabla de la clase
-    private static function _generateSelect()
+    //Función auxiliar que genera una select a la tabla de la clase respetando columnas y tabla personalizada
+    private static function _generateQuery()
     {
-        self::$query = "SELECT * FROM ".strtolower(get_called_class())."s";
+        $tabla = self::$customFrom ?? strtolower(get_called_class())."s";
+        self::$query = "SELECT ".self::$selectColumns." FROM ".$tabla;
     }
 
     //Función para añadir una cláusula where a la select (si esta no existe, la crea)
@@ -171,7 +185,7 @@ class Model
     {
         if(self::$query == "") //Si no hay query
         {
-            self::_generateSelect(); //Generamos la select
+            self::_generateQuery(); //Generamos la select
         }
 
         //Añadimos la cláusula where
@@ -186,7 +200,7 @@ class Model
         $and = "AND";
         if(self::$query == "") //Si no hay query
         {
-            self::_generateSelect(); //Generamos la select
+            self::_generateQuery(); //Generamos la select
             $and = "WHERE";
         }
 
@@ -197,40 +211,60 @@ class Model
     }
 
     //Función para añadir una cláusula orderby a la select (si esta no existe, la crea)
+    //Soporta múltiples orderby: la primera llamada usa ORDER BY, las siguientes añaden con ,
     public static function orderby($field, $order = "ASC")
     {
         if(self::$query == "") //Si no hay query
         {
-            self::_generateSelect(); //Generamos la select
+            self::_generateQuery(); //Generamos la select
         }
 
-        //Añadimos la cláusula
-        self::$query = self::$query." ORDER BY $field $order";
+        //Si ya existe una cláusula ORDER BY, añadimos con coma; si no, creamos la cláusula
+        if(strpos(self::$query, "ORDER BY") !== false)
+        {
+            self::$query = self::$query.", $field $order";
+        }
+        else
+        {
+            self::$query = self::$query." ORDER BY $field $order";
+        }
 
     }
 
-    //Función para hacer inner join
-    public static function inner_join($tabla, $on_field1, $on_operator, $on_field2)
+    //Función para hacer inner join (la cláusula ON se pasa como SQL literal)
+    public static function inner_join($tabla, $on_clause)
     {
         if(self::$query == "") //Si no hay query
         {
-            self::_generateSelect(); //Generamos la select
+            self::_generateQuery(); //Generamos la select
         }
 
-        self::$query = self::$query." INNER JOIN $tabla ON ".strtolower(get_called_class())."s.$on_field1 $on_operator $tabla.$on_field2";
+        self::$query = self::$query." INNER JOIN $tabla ON $on_clause";
 
     }
 
-    //Función para hacer inner join
-    public static function outer_join($tabla, $on_field1, $on_operator, $on_field2)
+    //Inner join a partir de una clase Model, su alias y la cláusula ON literal
+    public static function innerJoinModel($class, $alias, $onClause)
+    {
+        self::inner_join($class::tableName()." ".$alias, $onClause);
+    }
+
+    //Función para hacer left outer join (la cláusula ON se pasa como SQL literal)
+    public static function outer_join($tabla, $on_clause)
     {
         if(self::$query == "") //Si no hay query
         {
-            self::_generateSelect(); //Generamos la select
+            self::_generateQuery(); //Generamos la select
         }
 
-        self::$query = self::$query." LEFT OUTER JOIN $tabla ON ".strtolower(get_called_class())."s.$on_field1 $on_operator $tabla.$on_field2";
+        self::$query = self::$query." LEFT OUTER JOIN $tabla ON $on_clause";
 
+    }
+
+    //Left outer join a partir de una clase Model, su alias y la cláusula ON literal
+    public static function outerJoinModel($class, $alias, $onClause)
+    {
+        self::outer_join($class::tableName()." ".$alias, $onClause);
     }
 
     //Función para paginar la petición
@@ -238,7 +272,7 @@ class Model
     {
         if(self::$query == "") //Si no hay query
         {
-            self::_generateSelect(); //Generamos la select
+            self::_generateQuery(); //Generamos la select
         }
 
         //Añadimos la cláusula
@@ -257,7 +291,7 @@ class Model
     {
         if(self::$query == "") //Si no hay query
         {
-            self::_generateSelect(); //Generamos select
+            self::_generateQuery(); //Generamos select
         }
 
         //Ejecutamos la query
@@ -280,6 +314,162 @@ class Model
 
         self::$query = "";
         return $retorno; //Devolvemos la lista de retorno
+    }
+
+    //Devuelve el resultado de la query como array asociativo crudo (sin instanciar modelos).
+    //Útil para consultas con JOIN que devuelven columnas de varias tablas.
+    public static function getRaw()
+    {
+        if(self::$query == "") //Si no hay query
+        {
+            self::_generateQuery(); //Generamos select
+        }
+
+        $query_result = BD::getInstance()->select(self::$query)->fetchAll(\PDO::FETCH_ASSOC);
+
+        self::$query = "";
+        return (!empty($query_result)) ? $query_result : [];
+    }
+
+    //Establece las columnas del SELECT (por defecto "*")
+    public static function select($columns)
+    {
+        self::$selectColumns = $columns;
+    }
+
+    //Establece una tabla FROM personalizada (con alias si se desea: "invitados i")
+    public static function fromTable($tableName)
+    {
+        self::$customFrom = $tableName;
+    }
+
+    //Establece el FROM a partir de una clase Model y su alias
+    public static function fromModel($class, $alias)
+    {
+        self::fromTable($class::tableName()." ".$alias);
+    }
+
+    //Añade una cláusula GROUP BY
+    public static function groupBy($field)
+    {
+        if(self::$query == "") //Si no hay query
+        {
+            self::_generateQuery();
+        }
+        self::$query = self::$query." GROUP BY $field";
+    }
+
+    //Añade una cláusula LIMIT simple (sin offset)
+    public static function limit($n)
+    {
+        if(self::$query == "") //Si no hay query
+        {
+            self::_generateQuery();
+        }
+        self::$query = self::$query." LIMIT ".intval($n);
+    }
+
+    //Añade una cláusula WHERE/AND con SQL literal sin sanitizar.
+    //$operator: 'AND' (por defecto), 'WHERE', 'OR'
+    public static function rawWhere($clause, $operator = 'AND')
+    {
+        if(self::$query == "")
+        {
+            self::_generateQuery();
+            $operator = "WHERE";
+        }
+        elseif(stripos(self::$query, 'WHERE') === false)
+        {
+            $operator = "WHERE";
+        }
+        self::$query = self::$query." $operator $clause";
+    }
+
+    //Sugar syntax: where con LIKE
+    public static function like($field, $pattern)
+    {
+        self::where($field, "LIKE", $pattern);
+    }
+
+    //Ejecuta COUNT(*) sobre la query construida y devuelve un entero.
+    //Ignora ORDER BY y LIMIT de la query original.
+    public static function count()
+    {
+        if(self::$query == "")
+        {
+            self::_generateQuery();
+        }
+
+        //Transformamos SELECT columnas FROM en SELECT COUNT(*) AS total FROM,
+        //eliminando ORDER BY y LIMIT
+        $countQuery = self::$query;
+        $countQuery = preg_replace('/^SELECT\s+.+?\s+FROM\s+/i', 'SELECT COUNT(*) AS total FROM ', $countQuery);
+        //Eliminar ORDER BY y lo que sigue
+        $orderPos = stripos($countQuery, 'ORDER BY');
+        if($orderPos !== false) {
+            $countQuery = substr($countQuery, 0, $orderPos);
+        }
+        //Eliminar LIMIT y lo que sigue
+        $limitPos = stripos($countQuery, 'LIMIT');
+        if($limitPos !== false) {
+            $countQuery = substr($countQuery, 0, $limitPos);
+        }
+
+        $rows = BD::getInstance()->select($countQuery)->fetchAll(\PDO::FETCH_ASSOC);
+        self::clearQuery();
+
+        if(!empty($rows) && isset($rows[0]['total'])) {
+            return (int)$rows[0]['total'];
+        }
+        return 0;
+    }
+
+    //Elimina todos los registros que coincidan con los WHERE actuales.
+    //Requiere al menos una cláusula WHERE por seguridad.
+    public static function deleteAll()
+    {
+        if(self::$query == "")
+        {
+            //Sin WHERE no se borra nada, por seguridad
+            return false;
+        }
+
+        //Transformamos SELECT ... FROM en DELETE FROM,
+        //eliminando SELECT columns, ORDER BY, LIMIT, GROUP BY, JOINs
+        $deleteQuery = self::$query;
+
+        //Extraer la parte FROM tabla [alias]
+        if(preg_match('/FROM\s+(\S+)/i', $deleteQuery, $matches)) {
+            $fromTable = $matches[1];
+        } else {
+            $fromTable = strtolower(get_called_class())."s";
+        }
+
+        //Extraer solo las cláusulas WHERE
+        $wherePart = "";
+        $wherePos = stripos($deleteQuery, 'WHERE');
+        if($wherePos !== false) {
+            $wherePart = substr($deleteQuery, $wherePos);
+            //Eliminar ORDER BY, LIMIT, GROUP BY posteriores
+            foreach(['ORDER BY', 'LIMIT', 'GROUP BY'] as $kw) {
+                $kwPos = stripos($wherePart, $kw);
+                if($kwPos !== false) {
+                    $wherePart = substr($wherePart, 0, $kwPos);
+                }
+            }
+        }
+
+        if(empty($wherePart)) {
+            //Sin WHERE no se borra nada
+            return false;
+        }
+
+        $deleteQuery = "DELETE FROM ".$fromTable." ".$wherePart;
+
+        BD::getInstance()->prepare($deleteQuery);
+        BD::getInstance()->execPreparedQuery([]);
+        self::clearQuery();
+        return true;
     }
 
     //Función que devuelve el primer modelo que coincida con la select

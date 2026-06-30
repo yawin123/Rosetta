@@ -216,17 +216,6 @@ class AuthorizationUtils
 
     $ad = new AuthorizationData();
     $ad->username = md5($username);
-    /*$ad->semilla = "";
-     *      for($i = rand(9,20); $i > 0; $i--)
-     *      {
-     *        $ad->semilla = $ad->semilla.rand(0,9);
-  }
-
-  $resp = self::apicall("/hash", ["data" => $ad->semilla, "seed" => $ad->semilla]);
-  $pass = $resp->hash;
-
-  $resp = self::apicall("/hash", ["data" => $pass, "seed" => $ad->semilla]);
-  $ad->password = $resp->hash;*/
 
     $resp = $this->generatePassword();
     $ad->semilla = $resp["semilla"];

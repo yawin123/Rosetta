@@ -90,7 +90,7 @@ class FileManager
     $destino = self::$path.$nombre;
     $status = '';
 
-    if(copy($file['tmp_name'],$destino))
+    if(move_uploaded_file($file['tmp_name'],$destino))
     {
       $status=$nombre;
     }
