@@ -312,7 +312,7 @@ class Model
             }
         }
 
-        self::$query = "";
+        self::clearQuery();
         return $retorno; //Devolvemos la lista de retorno
     }
 
@@ -327,7 +327,7 @@ class Model
 
         $query_result = BD::getInstance()->select(self::$query)->fetchAll(\PDO::FETCH_ASSOC);
 
-        self::$query = "";
+        self::clearQuery();
         return (!empty($query_result)) ? $query_result : [];
     }
 
